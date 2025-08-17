@@ -8,7 +8,7 @@ dotenv.config();
 const PORT = process.env.BACK_PORT || 3000;
 const ALLOWED_URLS = [
   `${process.env.FRONT_DEV_ROOT}:${process.env.FRONT_PORT}`,
-  `${process.env.FRONT_PROD_ROOT}:${process.env.FRONT_PORT}`,
+  `${process.env.FRONT_PROD_ROOT}`,
 ];
 
 const app = express();
