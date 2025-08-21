@@ -6,7 +6,16 @@ export class UserRepository {
   }
 
   findById(id) {
-    return prisma.user.findUnique({ where: { id } });
+    return prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        password: false,
+        role: false,
+      },
+    });
   }
 
   findByEmail(email) {
@@ -14,7 +23,17 @@ export class UserRepository {
   }
 
   findMany(skip, take) {
-    return prisma.user.findMany({ skip, take });
+    return prisma.user.findMany({
+      skip,
+      take,
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        password: false,
+        role: false,
+      },
+    });
   }
 
   update(id, data) {
