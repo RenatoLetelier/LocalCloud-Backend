@@ -15,6 +15,9 @@ app.use(express.json());
 app.get("/", (req, res) => {
   res.send("Home");
 });
+app.get("/orianita", (req, res) => {
+  res.send("I love youuuuuu!!!! <3<3<3");
+});
 app.use("/api/auth", authRoutes);
 
 // Require TOKEN
