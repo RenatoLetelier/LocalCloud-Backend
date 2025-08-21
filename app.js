@@ -11,17 +11,16 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// públicas
+// Public
 app.get("/", (req, res) => {
   res.send("Home");
 });
 app.use("/api/auth", authRoutes);
 
-// a partir de aquí TODO requiere Bearer
+// Require TOKEN
 app.use("/api", requireAuth);
 
 app.use("/api/users", userRoutes);
-// ...cualquier otro router bajo /api quedará protegido
 
 app.use(errorMiddleware);
 
