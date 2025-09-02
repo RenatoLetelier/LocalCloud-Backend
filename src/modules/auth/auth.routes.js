@@ -6,7 +6,6 @@ import { env } from "../../config/env.js";
 
 const router = Router();
 
-// POST /api/auth/login { email, password }
 router.post("/login", async (req, res) => {
   const { email, password } = req.body ?? {};
   if (!email || !password)
@@ -15,10 +14,12 @@ router.post("/login", async (req, res) => {
   const user = await prisma.user.findFirst({
     where: { email },
   });
-  if (!user) return res.status(401).json({ message: "Invalid credentials" });
+  if (!user)
+    return res.status(401).json({ message: "Incorrect email or password" });
 
   const ok = await bcrypt.compare(password, user.password);
-  if (!ok) return res.status(401).json({ message: "Invalid credentials" });
+  if (!ok)
+    return res.status(401).json({ message: "Incorrect email or password" });
 
   const token = jwt.sign({ sub: user.id, role: user.role }, env.jwtSecret, {
     algorithm: "HS256",

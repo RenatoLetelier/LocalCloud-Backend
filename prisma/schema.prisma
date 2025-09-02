@@ -1,21 +1,43 @@
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-    provider = "postgresql"
-    url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 enum Role {
-    admin
-    user
+  user
+  admin
+}
+
+enum Visibility {
+  public
+  private
 }
 
 model User {
-    id       String @id @default(cuid())
-    username String
-    email    String @unique
-    password String
-    role     Role   @default(user)
+  id       String @id @default(cuid())
+  username String
+  email    String @unique
+  password String
+  role     Role   @default(user)
+
+  photos Photo[]
+}
+
+model Photo {
+  id           String     @id @default(cuid())
+  name         String
+  description  String
+  path         String     @unique
+  albums       String[]   @default([])
+  tags         String[]   @default([])
+  visibility   Visibility @default(public)
+  metadata     Json
+  uploadedById String
+  uploadedBy   User       @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+
+  @@index([uploadedById])
 }
