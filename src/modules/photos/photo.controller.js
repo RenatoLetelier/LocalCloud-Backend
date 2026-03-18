@@ -1,13 +1,10 @@
 import { PhotoService } from "./photo.service.js";
-import { env } from "../../config/env.js";
 
 const service = new PhotoService();
 
 export const createPhoto = async (req, res, next) => {
-  const body = req.body;
   try {
-    const photo = await service.create(body);
-
+    const photo = await service.create({ ...req.body, uploadedById: req.user.id });
     return res.status(201).json({ photo });
   } catch (err) {
     next(err);

@@ -6,6 +6,7 @@ import { requireAuth } from "./src/middlewares/auth.middleware.js";
 import authRoutes from "./src/modules/auth/auth.routes.js";
 import userRoutes from "./src/modules/users/user.routes.js";
 import photoRoutes from "./src/modules/photos/photo.routes.js";
+import tunnelRoutes from "./src/modules/tunnel/tunnel.routes.js";
 
 const app = express();
 
@@ -21,6 +22,7 @@ app.use("/api/auth", authRoutes);
 // Require TOKEN
 app.use("/api/users", requireAuth, userRoutes);
 app.use("/api/photos", requireAuth, photoRoutes);
+app.use("/api/tunnel", requireAuth, tunnelRoutes);
 
 app.use(errorMiddleware);
 

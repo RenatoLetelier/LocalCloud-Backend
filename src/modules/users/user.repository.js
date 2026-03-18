@@ -40,10 +40,7 @@ export class UserRepository {
     return prisma.user.update({ where: { id }, data });
   }
 
-  // soft delete
   delete(id) {
-    return prisma.user.delete({
-      where: { id },
-    });
+    return prisma.user.delete({ where: { id } });
   }
 }
