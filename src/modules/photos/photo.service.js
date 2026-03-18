@@ -5,32 +5,14 @@ export class PhotoService {
     this.repo = repo;
   }
 
-  async create({
-    name,
-    description,
-    path,
-    albums,
-    tags,
-    visibility,
-    metadata,
-    uploadedBy,
-  }) {
+  async create({ name, description, path, albums, tags, visibility, metadata, uploadedById }) {
     const exists = await this.repo.findByPath(path);
     if (exists) {
       const e = new Error("Path of photo already exists");
       e.status = 409;
       throw e;
     }
-    return this.repo.create({
-      name,
-      description,
-      path,
-      albums,
-      tags,
-      visibility,
-      metadata,
-      uploadedBy,
-    });
+    return this.repo.create({ name, description, path, albums, tags, visibility, metadata, uploadedById });
   }
 
   get(id) {

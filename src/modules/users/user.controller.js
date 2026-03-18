@@ -15,8 +15,8 @@ export const createUser = async (req, res, next) => {
 
     const token = jwt.sign(
       { sub: user.id, role: user.role },
-      env.jwtSecret || process.env.JWT_SECRET,
-      { expiresIn: "7d" }
+      env.jwtSecret,
+      { algorithm: "HS256", expiresIn: "1h", issuer: env.jwtIssuer, audience: env.jwtAudience }
     );
 
     const { password: _omit, ...safeUser } = user;
@@ -51,7 +51,6 @@ export const listUsers = async (req, res, next) => {
 export const updateUser = async (req, res, next) => {
   try {
     const updated = await service.update(req.params.id, req.body);
-    // Nunca retornes el hash
     const { password: _omit, ...safe } = updated;
     res.json(safe);
   } catch (err) {
