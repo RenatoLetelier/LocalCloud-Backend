@@ -1,9 +1,9 @@
 import { mediaFetch } from "../media/media.client.js";
 
-export const listPhotos = async (req, res, next) => {
+export const listVideos = async (req, res, next) => {
   try {
     const { page = 1, limit = 50 } = req.query;
-    const upstream = await mediaFetch(`/media?type=photo&page=${page}&limit=${limit}`);
+    const upstream = await mediaFetch(`/media?type=video&page=${page}&limit=${limit}`);
     const data = await upstream.json();
     res.status(upstream.status).json(data);
   } catch (err) {
@@ -11,7 +11,7 @@ export const listPhotos = async (req, res, next) => {
   }
 };
 
-export const getPhoto = async (req, res, next) => {
+export const getVideo = async (req, res, next) => {
   try {
     const upstream = await mediaFetch(`/media/${encodeURIComponent(req.params.filename)}`);
     const data = await upstream.json();
@@ -21,7 +21,7 @@ export const getPhoto = async (req, res, next) => {
   }
 };
 
-export const updatePhoto = async (req, res, next) => {
+export const updateVideo = async (req, res, next) => {
   try {
     const upstream = await mediaFetch("/media", {
       method: "PATCH",
@@ -35,7 +35,7 @@ export const updatePhoto = async (req, res, next) => {
   }
 };
 
-export const deletePhoto = async (req, res, next) => {
+export const deleteVideo = async (req, res, next) => {
   try {
     const upstream = await mediaFetch(
       `/media/file/${encodeURIComponent(req.params.filename)}`,
