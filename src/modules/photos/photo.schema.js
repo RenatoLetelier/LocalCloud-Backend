@@ -20,18 +20,18 @@ export const createPhotoSchema = z.object({
 export const updatePhotoSchema = z.object({
   params: z.object({ id: z.string().cuid() }),
   body: z.object({
-    name: z.string().min(1).max(200),
+    name: z.string().min(1).max(200).optional(),
     description: z.string().max(1000).optional(),
-    path: z.string().min(1),
-    albums: z.array(z.string()).default([]),
-    tags: z.array(z.string()).default([]),
-    visibility: z.enum(["public", "private"]).default("public"),
+    path: z.string().min(1).optional(),
+    albums: z.array(z.string()).optional(),
+    tags: z.array(z.string()).optional(),
+    visibility: z.enum(["public", "private"]).optional(),
     metadata: z.object({
       size: z.number().positive(),
       type: z.string().min(1),
       width: z.number().int().positive(),
       height: z.number().int().positive(),
-    }),
+    }).optional(),
   }),
 });
 

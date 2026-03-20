@@ -1,7 +1,5 @@
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 import { UserService } from "./user.service.js";
-import { env } from "../../config/env.js";
 
 const service = new UserService();
 
@@ -10,18 +8,9 @@ export const createUser = async (req, res, next) => {
     const { email, username, password, role = "user" } = req.body;
 
     const passwordHash = await bcrypt.hash(password, 12);
-
     const user = await service.create(email, username, passwordHash, role);
 
-    const token = jwt.sign(
-      { sub: user.id, role: user.role },
-      env.jwtSecret || process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
-
-    const { password: _omit, ...safeUser } = user;
-
-    res.status(201).json({ user: safeUser, token });
+    res.status(201).json({ user });
   } catch (err) {
     next(err);
   }
@@ -39,10 +28,11 @@ export const getUser = async (req, res, next) => {
 
 export const listUsers = async (req, res, next) => {
   try {
-    const page = Number(req.query.page ?? 1);
-    const pageSize = Number(req.query.pageSize ?? 20);
-    const data = await service.list(page, pageSize);
-    res.json({ page, pageSize, data });
+    const page = Math.max(1, Number(req.query.page ?? 1));
+    const pageSize = Math.min(100, Math.max(1, Number(req.query.pageSize ?? 20)));
+    const { data, total } = await service.list(page, pageSize);
+    const totalPages = Math.ceil(total / pageSize);
+    res.json({ total, page, pageSize, totalPages, data });
   } catch (err) {
     next(err);
   }
@@ -50,10 +40,8 @@ export const listUsers = async (req, res, next) => {
 
 export const updateUser = async (req, res, next) => {
   try {
-    const updated = await service.update(req.params.id, req.body);
-    // Nunca retornes el hash
-    const { password: _omit, ...safe } = updated;
-    res.json(safe);
+    const user = await service.update(req.params.id, req.body);
+    res.json(user);
   } catch (err) {
     next(err);
   }

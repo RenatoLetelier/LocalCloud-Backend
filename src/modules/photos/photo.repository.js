@@ -15,18 +15,15 @@ export class PhotoRepository {
     return prisma.photo.findUnique({ where: { path } });
   }
 
-  findMany() {
-    return prisma.photo.findMany();
+  findMany(skip, take) {
+    return prisma.photo.findMany({ skip, take });
   }
 
   update(id, data) {
     return prisma.photo.update({ where: { id }, data });
   }
 
-  // soft delete
   delete(id) {
-    return prisma.photo.delete({
-      where: { id },
-    });
+    return prisma.photo.delete({ where: { id } });
   }
 }

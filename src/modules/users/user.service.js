@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import { UserRepository } from "./user.repository.js";
 
 const looksBcryptHash = (s) =>
-  typeof s === "string" && s.startsWith("$2") && s.length === 60;
+  typeof s === "string" && s.startsWith("$2") && s.length >= 59;
 
 export class UserService {
   constructor(repo = new UserRepository()) {
@@ -31,7 +31,6 @@ export class UserService {
   async update(id, data) {
     const patch = { ...data };
 
-    // Si se intenta cambiar el email, valida unicidad
     if (patch.email) {
       const existing = await this.repo.findByEmail(patch.email);
       if (existing && existing.id !== id) {
@@ -41,17 +40,11 @@ export class UserService {
       }
     }
 
-    // Hashear sólo si viene password en texto plano
-    if (
-      typeof patch.password === "string" &&
-      patch.password.trim().length > 0
-    ) {
-      // Evita doble-hash si por error te mandan el hash ya existente
+    if (typeof patch.password === "string" && patch.password.trim().length > 0) {
       if (!looksBcryptHash(patch.password)) {
         patch.password = await bcrypt.hash(patch.password, 12);
       }
     } else {
-      // Si viene vacío/null, no toques el password
       delete patch.password;
     }
 

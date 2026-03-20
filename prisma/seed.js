@@ -1,13 +1,21 @@
+import bcrypt from "bcryptjs";
 import { prisma } from "../src/config/prisma.js";
 
 async function main() {
-  await prisma.user.createMany({
-    data: [
-      { email: "alice@example.com", name: "Alice" },
-      { email: "bob@example.com", name: "Bob" },
-    ],
-    skipDuplicates: true,
+  const passwordHash = await bcrypt.hash("admin1234", 12);
+
+  await prisma.user.upsert({
+    where: { email: "admin@localcloud.local" },
+    update: {},
+    create: {
+      email: "admin@localcloud.local",
+      username: "admin",
+      password: passwordHash,
+      role: "admin",
+    },
   });
+
+  console.log("Seed completed. Default admin: admin@localcloud.local / admin1234");
 }
 
 main()
