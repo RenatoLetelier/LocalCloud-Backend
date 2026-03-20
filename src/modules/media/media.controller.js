@@ -1,31 +1,65 @@
 import { Readable } from "stream";
 import { mediaFetch } from "./media.client.js";
 
+const STREAM_TIMEOUT_MS = 30_000; // 30 s — abort if upstream doesn't respond in time
+
 /**
  * GET /api/media/file/:filename
  * Streams the file from the external media API directly to the client.
+ * Forwards Range headers so browsers can seek videos and buffer efficiently.
  */
 export const streamFile = async (req, res, next) => {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), STREAM_TIMEOUT_MS);
+
   try {
+    const upstreamHeaders = {};
+
+    // Forward Range header — essential for video seeking and chunked buffering
+    if (req.headers.range) {
+      upstreamHeaders["Range"] = req.headers.range;
+    }
+
     const upstream = await mediaFetch(
-      `/media/file/${encodeURIComponent(req.params.filename)}`
+      `/media/file/${encodeURIComponent(req.params.filename)}`,
+      { headers: upstreamHeaders, signal: controller.signal }
     );
 
-    if (!upstream.ok) {
+    clearTimeout(timer);
+
+    if (!upstream.ok && upstream.status !== 206) {
       const body = await upstream.json().catch(() => ({ message: "File not found" }));
       return res.status(upstream.status).json(body);
     }
 
-    // Forward safe headers
-    const forward = ["content-type", "content-length", "content-disposition", "accept-ranges"];
+    // Forward headers the browser needs for proper media playback
+    const forward = [
+      "content-type",
+      "content-length",
+      "content-range",
+      "accept-ranges",
+      "content-disposition",
+    ];
     for (const header of forward) {
       const value = upstream.headers.get(header);
       if (value) res.setHeader(header, value);
     }
 
     res.status(upstream.status);
-    Readable.fromWeb(upstream.body).pipe(res);
+
+    const stream = Readable.fromWeb(upstream.body);
+
+    // Handle errors that occur after headers are already sent (mid-stream)
+    stream.on("error", () => {
+      if (!res.writableEnded) res.destroy();
+    });
+
+    stream.pipe(res);
   } catch (err) {
+    clearTimeout(timer);
+    if (err.name === "AbortError") {
+      return res.status(504).json({ message: "Media API timed out" });
+    }
     next(err);
   }
 };
