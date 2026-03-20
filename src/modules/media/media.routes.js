@@ -10,7 +10,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 router.get("/file/:filename", streamFile);
 
 // POST /api/media/upload  — upload a file (multipart, field: "file")
-router.post("/upload", requireRole("admin"), upload.single("file"), uploadFile);
+router.post("/upload", requireRole("admin"), upload.single("files"), uploadFile);
 
 // POST /api/media/deduplicate  — find duplicates
 router.post("/deduplicate", requireRole("admin"), deduplicateMedia);

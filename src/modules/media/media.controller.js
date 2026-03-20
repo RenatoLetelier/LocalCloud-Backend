@@ -72,12 +72,12 @@ export const streamFile = async (req, res, next) => {
 export const uploadFile = async (req, res, next) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ message: "No file provided. Use field name 'file'" });
+      return res.status(400).json({ message: "No file provided. Use field name 'files'" });
     }
 
     const formData = new FormData();
     formData.append(
-      "file",
+      "files",
       new Blob([req.file.buffer], { type: req.file.mimetype }),
       req.file.originalname
     );
