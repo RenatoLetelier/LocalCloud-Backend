@@ -9,8 +9,7 @@ export const env = {
   jwtSecret: process.env.JWT_SECRET,
   jwtIssuer: process.env.JWT_ISSUER ?? "localcloud",
   jwtAudience: process.env.JWT_AUDIENCE ?? "localcloud-api",
-  // Credentials used by this server to authenticate against the external media API
-  mediaEmail: process.env.MEDIA_EMAIL,
+  // Static password used by this server to authenticate against the external media API
   mediaPassword: process.env.MEDIA_PASSWORD,
 };
 

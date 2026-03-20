@@ -21,7 +21,7 @@ async function login(baseUrl) {
     res = await fetch(`${baseUrl}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: env.mediaEmail, password: env.mediaPassword }),
+      body: JSON.stringify({ password: env.mediaPassword }),
     });
   } catch {
     const e = new Error("Could not reach Media API");
