@@ -14,11 +14,13 @@ export function requireAuth(req, res, next) {
       issuer: env.jwtIssuer,
       audience: env.jwtAudience,
     });
-    // Puedes limitar lo que guardas en req.user
     req.user = { id: payload.sub, role: payload.role };
     return next();
   } catch (e) {
-    return res.status(401).json({ message: "Invalid or expired token" });
+    if (e.name === "TokenExpiredError") {
+      return res.status(401).json({ message: "Token expired, please log in again" });
+    }
+    return res.status(401).json({ message: "Invalid token" });
   }
 }
 
