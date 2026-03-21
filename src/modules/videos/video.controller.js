@@ -1,7 +1,5 @@
 import { Readable } from "stream";
-import { mediaFetch, getMediaToken } from "../media/media.client.js";
-
-const STREAM_TIMEOUT_MS = 30_000;
+import { mediaFetch, getMediaToken, getMediaCdnUrl } from "../media/media.client.js";
 
 export const listVideos = async (req, res, next) => {
   try {
@@ -26,45 +24,14 @@ export const getVideo = async (req, res, next) => {
   }
 };
 
-// Streams HLS segments, playlists, subtitles, etc.
-// Route: GET /api/videos/:id/stream/*
+// Redirects HLS requests (segments, playlists, subtitles) to the CDN.
+// Route: GET /api/videos/:id/stream/*splat
 export const streamVideo = async (req, res, next) => {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), STREAM_TIMEOUT_MS);
   try {
+    const cdnUrl = await getMediaCdnUrl();
     const subpath = req.params.splat || "";
-    const upstreamHeaders = {};
-    if (req.headers.range) upstreamHeaders["Range"] = req.headers.range;
-
-    const upstream = await mediaFetch(
-      `/media/videos/${encodeURIComponent(req.params.id)}/stream/${subpath}`,
-      { headers: upstreamHeaders, signal: controller.signal }
-    );
-    clearTimeout(timer);
-
-    if (!upstream.ok && upstream.status !== 206) {
-      const body = await upstream.json().catch(() => ({ message: "File not found" }));
-      return res.status(upstream.status).json(body);
-    }
-
-    const forward = [
-      "content-type", "content-length", "content-range",
-      "accept-ranges", "content-disposition", "cache-control",
-    ];
-    for (const header of forward) {
-      const value = upstream.headers.get(header);
-      if (value) res.setHeader(header, value);
-    }
-
-    res.status(upstream.status);
-    const stream = Readable.fromWeb(upstream.body);
-    stream.on("error", () => { if (!res.writableEnded) res.destroy(); });
-    stream.pipe(res);
+    res.redirect(`${cdnUrl}/media/videos/${encodeURIComponent(req.params.id)}/stream/${subpath}`);
   } catch (err) {
-    clearTimeout(timer);
-    if (err.name === "AbortError") {
-      return res.status(504).json({ message: "Media API timed out" });
-    }
     next(err);
   }
 };

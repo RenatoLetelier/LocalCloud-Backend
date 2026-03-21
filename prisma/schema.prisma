@@ -45,5 +45,6 @@ model Photo {
 model TunnelConfig {
   id        String   @id @default("singleton")
   url       String
+  cdnUrl    String?
   updatedAt DateTime @updatedAt
 }

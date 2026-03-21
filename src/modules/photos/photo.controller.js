@@ -1,7 +1,4 @@
-import { Readable } from "stream";
-import { mediaFetch } from "../media/media.client.js";
-
-const STREAM_TIMEOUT_MS = 30_000;
+import { mediaFetch, getMediaCdnUrl } from "../media/media.client.js";
 
 export const listPhotos = async (req, res, next) => {
   try {
@@ -27,35 +24,10 @@ export const getPhoto = async (req, res, next) => {
 };
 
 export const streamPhoto = async (req, res, next) => {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), STREAM_TIMEOUT_MS);
   try {
-    const upstream = await mediaFetch(
-      `/media/files/${encodeURIComponent(req.params.id)}/stream`,
-      { signal: controller.signal }
-    );
-    clearTimeout(timer);
-
-    if (!upstream.ok) {
-      const body = await upstream.json().catch(() => ({ message: "File not found" }));
-      return res.status(upstream.status).json(body);
-    }
-
-    const forward = ["content-type", "content-length", "content-disposition", "cache-control"];
-    for (const header of forward) {
-      const value = upstream.headers.get(header);
-      if (value) res.setHeader(header, value);
-    }
-
-    res.status(upstream.status);
-    const stream = Readable.fromWeb(upstream.body);
-    stream.on("error", () => { if (!res.writableEnded) res.destroy(); });
-    stream.pipe(res);
+    const cdnUrl = await getMediaCdnUrl();
+    res.redirect(`${cdnUrl}/media/files/${encodeURIComponent(req.params.id)}/stream`);
   } catch (err) {
-    clearTimeout(timer);
-    if (err.name === "AbortError") {
-      return res.status(504).json({ message: "Media API timed out" });
-    }
     next(err);
   }
 };
