@@ -1,9 +1,12 @@
-import { mediaFetch } from "../media/media.client.js";
+import { Readable } from "stream";
+import { mediaFetch, getMediaToken, getMediaBaseUrl } from "../media/media.client.js";
 
 export const listVideos = async (req, res, next) => {
   try {
-    const { page = 1, limit = 50 } = req.query;
-    const upstream = await mediaFetch(`/media?type=video&page=${page}&limit=${limit}`);
+    const { page = 1, limit = 20, sort = "mtime", order = "desc" } = req.query;
+    const upstream = await mediaFetch(
+      `/media/videos?sort=${sort}&order=${order}&page=${page}&limit=${limit}`
+    );
     const data = await upstream.json();
     res.status(upstream.status).json(data);
   } catch (err) {
@@ -13,7 +16,81 @@ export const listVideos = async (req, res, next) => {
 
 export const getVideo = async (req, res, next) => {
   try {
-    const upstream = await mediaFetch(`/media/${encodeURIComponent(req.params.filename)}`);
+    const upstream = await mediaFetch(`/media/videos/${encodeURIComponent(req.params.id)}`);
+    const data = await upstream.json();
+    res.status(upstream.status).json(data);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Redirects HLS requests (segments, playlists, subtitles) to the media API.
+// Route: GET /api/videos/:id/stream/*splat
+export const streamVideo = async (req, res, next) => {
+  try {
+    const baseUrl = await getMediaBaseUrl();
+    const subpath = req.params.splat || "";
+    res.redirect(`${baseUrl}/media/videos/${encodeURIComponent(req.params.id)}/stream/${subpath}`);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getUploadToken = async (req, res, next) => {
+  try {
+    const { token, uploadUrl } = await getMediaToken();
+    res.json({
+      token,
+      uploadUrl: `${uploadUrl}/media/videos/upload`,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const uploadVideo = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file provided. Use field name 'file'" });
+    }
+    const formData = new FormData();
+    formData.append(
+      "file",
+      new Blob([req.file.buffer], { type: req.file.mimetype }),
+      req.file.originalname
+    );
+    if (req.body.name) formData.append("name", req.body.name);
+
+    const upstream = await mediaFetch("/media/videos/upload", {
+      method: "POST",
+      body: formData,
+    });
+    const text = await upstream.text();
+    let data;
+    try { data = JSON.parse(text); } catch { data = { message: text || "Upload complete" }; }
+    res.status(upstream.status).json(data);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const addVideoFile = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file provided" });
+    }
+    const formData = new FormData();
+    formData.append(
+      "file",
+      new Blob([req.file.buffer], { type: req.file.mimetype }),
+      req.file.originalname
+    );
+    if (req.body.path) formData.append("path", req.body.path);
+
+    const upstream = await mediaFetch(
+      `/media/videos/${encodeURIComponent(req.params.id)}/files`,
+      { method: "POST", body: formData }
+    );
     const data = await upstream.json();
     res.status(upstream.status).json(data);
   } catch (err) {
@@ -23,7 +100,7 @@ export const getVideo = async (req, res, next) => {
 
 export const updateVideo = async (req, res, next) => {
   try {
-    const upstream = await mediaFetch("/media", {
+    const upstream = await mediaFetch(`/media/videos/${encodeURIComponent(req.params.id)}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(req.body),
@@ -38,7 +115,7 @@ export const updateVideo = async (req, res, next) => {
 export const deleteVideo = async (req, res, next) => {
   try {
     const upstream = await mediaFetch(
-      `/media/file/${encodeURIComponent(req.params.filename)}`,
+      `/media/videos/${encodeURIComponent(req.params.id)}`,
       { method: "DELETE" }
     );
     if (upstream.status === 204) return res.status(204).send();
