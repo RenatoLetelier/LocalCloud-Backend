@@ -1,7 +1,5 @@
 import { Readable } from "stream";
-import { mediaFetch, getMediaToken } from "../media/media.client.js";
-
-const STREAM_TIMEOUT_MS = 30_000;
+import { mediaFetch, getMediaToken, getMediaBaseUrl } from "../media/media.client.js";
 
 export const listVideos = async (req, res, next) => {
   try {
@@ -26,55 +24,24 @@ export const getVideo = async (req, res, next) => {
   }
 };
 
-// Streams HLS segments, playlists, subtitles, etc.
-// Route: GET /api/videos/:id/stream/*
+// Redirects HLS requests (segments, playlists, subtitles) to the media API.
+// Route: GET /api/videos/:id/stream/*splat
 export const streamVideo = async (req, res, next) => {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), STREAM_TIMEOUT_MS);
   try {
+    const baseUrl = await getMediaBaseUrl();
     const subpath = req.params.splat || "";
-    const upstreamHeaders = {};
-    if (req.headers.range) upstreamHeaders["Range"] = req.headers.range;
-
-    const upstream = await mediaFetch(
-      `/media/videos/${encodeURIComponent(req.params.id)}/stream/${subpath}`,
-      { headers: upstreamHeaders, signal: controller.signal }
-    );
-    clearTimeout(timer);
-
-    if (!upstream.ok && upstream.status !== 206) {
-      const body = await upstream.json().catch(() => ({ message: "File not found" }));
-      return res.status(upstream.status).json(body);
-    }
-
-    const forward = [
-      "content-type", "content-length", "content-range",
-      "accept-ranges", "content-disposition", "cache-control",
-    ];
-    for (const header of forward) {
-      const value = upstream.headers.get(header);
-      if (value) res.setHeader(header, value);
-    }
-
-    res.status(upstream.status);
-    const stream = Readable.fromWeb(upstream.body);
-    stream.on("error", () => { if (!res.writableEnded) res.destroy(); });
-    stream.pipe(res);
+    res.redirect(`${baseUrl}/media/videos/${encodeURIComponent(req.params.id)}/stream/${subpath}`);
   } catch (err) {
-    clearTimeout(timer);
-    if (err.name === "AbortError") {
-      return res.status(504).json({ message: "Media API timed out" });
-    }
     next(err);
   }
 };
 
 export const getUploadToken = async (req, res, next) => {
   try {
-    const { token, baseUrl } = await getMediaToken();
+    const { token, uploadUrl } = await getMediaToken();
     res.json({
       token,
-      uploadUrl: `${baseUrl}/media/videos/upload`,
+      uploadUrl: `${uploadUrl}/media/videos/upload`,
     });
   } catch (err) {
     next(err);

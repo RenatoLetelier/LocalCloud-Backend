@@ -5,14 +5,19 @@ import { env } from "../../config/env.js";
 // forces a re-login against the new host.
 let cache = { url: null, token: null, expiry: 0 };
 
-async function getBaseUrl() {
+async function getConfig() {
   const config = await prisma.tunnelConfig.findUnique({ where: { id: "singleton" } });
   if (!config?.url) {
     const e = new Error("Media API URL not configured. Set it via PUT /api/tunnel");
     e.status = 503;
     throw e;
   }
-  return config.url.replace(/\/$/, ""); // strip trailing slash
+  return config;
+}
+
+async function getBaseUrl() {
+  const config = await getConfig();
+  return config.url.replace(/\/$/, "");
 }
 
 async function login(baseUrl) {
@@ -77,14 +82,16 @@ export async function mediaFetch(path, options = {}) {
   return res;
 }
 
-/** Returns the configured base URL (useful for building stream URLs on the client). */
+/** Returns the API (upload) base URL. */
 export async function getMediaBaseUrl() {
   return getBaseUrl();
 }
 
-/** Returns a valid media API token and the base URL — for direct client uploads. */
+/** Returns a valid media API token — for direct client video uploads via the upload URL. */
 export async function getMediaToken() {
   const baseUrl = await getBaseUrl();
   const token = await ensureToken(baseUrl);
-  return { token, baseUrl };
+  const config = await getConfig();
+  const uploadUrl = (config.uploadUrl ?? config.url).replace(/\/$/, "");
+  return { token, uploadUrl };
 }
