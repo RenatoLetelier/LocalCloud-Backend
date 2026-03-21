@@ -3,6 +3,7 @@ import multer from "multer";
 import {
   listVideos,
   getVideo,
+  streamVideo,
   updateVideo,
   deleteVideo,
   uploadVideo,
@@ -24,6 +25,9 @@ router.get("/upload-token", requireRole("admin"), getUploadToken);
 
 // POST /api/videos/upload  — upload HLS zip (field: "file")
 router.post("/upload", requireRole("admin"), uploadZip.single("file"), uploadVideo);
+
+// GET /api/videos/:id/stream/*splat  — HLS playlist, segments, subtitles
+router.get("/:id/stream/*splat", streamVideo);
 
 // GET /api/videos/:id
 router.get("/:id", getVideo);
