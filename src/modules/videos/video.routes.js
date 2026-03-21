@@ -12,6 +12,8 @@ import { requireRole } from "../../middlewares/auth.middleware.js";
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });
+// Zip files can be large — 2 GB ceiling so multer doesn't silently drop the body
+const uploadZip = multer({ storage: multer.memoryStorage(), limits: { fileSize: 2 * 1024 ** 3 } });
 
 // GET /api/videos?page=1&limit=20&sort=mtime&order=desc
 router.get("/", listVideos);
@@ -20,7 +22,7 @@ router.get("/", listVideos);
 router.get("/:id", getVideo);
 
 // POST /api/videos/upload  — upload HLS zip (field: "file")
-router.post("/upload", requireRole("admin"), upload.single("file"), uploadVideo);
+router.post("/upload", requireRole("admin"), uploadZip.single("file"), uploadVideo);
 
 // POST /api/videos/:id/files  — add subtitle / audio track
 router.post("/:id/files", requireRole("admin"), upload.single("file"), addVideoFile);

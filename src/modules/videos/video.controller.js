@@ -86,7 +86,9 @@ export const uploadVideo = async (req, res, next) => {
       method: "POST",
       body: formData,
     });
-    const data = await upstream.json();
+    const text = await upstream.text();
+    let data;
+    try { data = JSON.parse(text); } catch { data = { message: text || "Upload complete" }; }
     res.status(upstream.status).json(data);
   } catch (err) {
     next(err);
