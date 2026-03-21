@@ -81,3 +81,10 @@ export async function mediaFetch(path, options = {}) {
 export async function getMediaBaseUrl() {
   return getBaseUrl();
 }
+
+/** Returns a valid media API token and the base URL — for direct client uploads. */
+export async function getMediaToken() {
+  const baseUrl = await getBaseUrl();
+  const token = await ensureToken(baseUrl);
+  return { token, baseUrl };
+}

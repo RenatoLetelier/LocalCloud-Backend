@@ -1,5 +1,5 @@
 import { Readable } from "stream";
-import { mediaFetch } from "../media/media.client.js";
+import { mediaFetch, getMediaToken } from "../media/media.client.js";
 
 const STREAM_TIMEOUT_MS = 30_000;
 
@@ -65,6 +65,18 @@ export const streamVideo = async (req, res, next) => {
     if (err.name === "AbortError") {
       return res.status(504).json({ message: "Media API timed out" });
     }
+    next(err);
+  }
+};
+
+export const getUploadToken = async (req, res, next) => {
+  try {
+    const { token, baseUrl } = await getMediaToken();
+    res.json({
+      token,
+      uploadUrl: `${baseUrl}/media/videos/upload`,
+    });
+  } catch (err) {
     next(err);
   }
 };

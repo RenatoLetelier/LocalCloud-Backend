@@ -7,6 +7,7 @@ import {
   deleteVideo,
   uploadVideo,
   addVideoFile,
+  getUploadToken,
 } from "./video.controller.js";
 import { requireRole } from "../../middlewares/auth.middleware.js";
 
@@ -20,6 +21,9 @@ router.get("/", listVideos);
 
 // GET /api/videos/:id
 router.get("/:id", getVideo);
+
+// GET /api/videos/upload-token  — returns a short-lived token for direct upload to the media API
+router.get("/upload-token", requireRole("admin"), getUploadToken);
 
 // POST /api/videos/upload  — upload HLS zip (field: "file")
 router.post("/upload", requireRole("admin"), uploadZip.single("file"), uploadVideo);
