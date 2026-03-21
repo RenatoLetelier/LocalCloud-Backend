@@ -4,16 +4,16 @@ import { requireRole } from "../../middlewares/auth.middleware.js";
 
 const router = Router();
 
-// GET /api/photos?page=1&limit=50
+// GET /api/photos?page=1&limit=50&sort=mtime&order=desc
 router.get("/", listPhotos);
 
-// GET /api/photos/:filename
-router.get("/:filename", getPhoto);
+// GET /api/photos/:id
+router.get("/:id", getPhoto);
 
-// PATCH /api/photos  (body: { filename, ...fields })
-router.patch("/", requireRole("admin"), updatePhoto);
+// PATCH /api/photos/:id
+router.patch("/:id", requireRole("admin"), updatePhoto);
 
-// DELETE /api/photos/:filename
-router.delete("/:filename", requireRole("admin"), deletePhoto);
+// DELETE /api/photos/:id
+router.delete("/:id", requireRole("admin"), deletePhoto);
 
 export default router;

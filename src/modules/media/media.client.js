@@ -43,7 +43,7 @@ async function ensureToken(baseUrl) {
     return cache.token;
   }
   const token = await login(baseUrl);
-  cache = { url: baseUrl, token, expiry: now + 55 * 60 * 1000 }; // 55-min TTL (1h JWT - 5min buffer)
+  cache = { url: baseUrl, token, expiry: now + 23 * 60 * 60 * 1000 }; // 23h TTL (24h JWT - 1h buffer)
   return token;
 }
 
