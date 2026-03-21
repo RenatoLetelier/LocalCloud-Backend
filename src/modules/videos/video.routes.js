@@ -1,19 +1,34 @@
 import { Router } from "express";
-import { listVideos, getVideo, updateVideo, deleteVideo } from "./video.controller.js";
+import multer from "multer";
+import {
+  listVideos,
+  getVideo,
+  updateVideo,
+  deleteVideo,
+  uploadVideo,
+  addVideoFile,
+} from "./video.controller.js";
 import { requireRole } from "../../middlewares/auth.middleware.js";
 
 const router = Router();
+const upload = multer({ storage: multer.memoryStorage() });
 
-// GET /api/videos?page=1&limit=50
+// GET /api/videos?page=1&limit=20&sort=mtime&order=desc
 router.get("/", listVideos);
 
-// GET /api/videos/:filename
-router.get("/:filename", getVideo);
+// GET /api/videos/:id
+router.get("/:id", getVideo);
 
-// PATCH /api/videos  (body: { filename, ...fields })
-router.patch("/", requireRole("admin"), updateVideo);
+// POST /api/videos/upload  — upload HLS zip (field: "file")
+router.post("/upload", requireRole("admin"), upload.single("file"), uploadVideo);
 
-// DELETE /api/videos/:filename
-router.delete("/:filename", requireRole("admin"), deleteVideo);
+// POST /api/videos/:id/files  — add subtitle / audio track
+router.post("/:id/files", requireRole("admin"), upload.single("file"), addVideoFile);
+
+// PATCH /api/videos/:id
+router.patch("/:id", requireRole("admin"), updateVideo);
+
+// DELETE /api/videos/:id
+router.delete("/:id", requireRole("admin"), deleteVideo);
 
 export default router;
