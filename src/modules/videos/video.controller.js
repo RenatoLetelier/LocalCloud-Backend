@@ -32,7 +32,7 @@ export const streamVideo = async (req, res, next) => {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), STREAM_TIMEOUT_MS);
   try {
-    const subpath = req.params[0] || "";
+    const subpath = req.params.splat || "";
     const upstreamHeaders = {};
     if (req.headers.range) upstreamHeaders["Range"] = req.headers.range;
 
