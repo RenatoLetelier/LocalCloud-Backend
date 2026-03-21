@@ -1,5 +1,5 @@
 import { Readable } from "stream";
-import { mediaFetch } from "../media/media.client.js";
+import { mediaFetch, getMediaToken } from "../media/media.client.js";
 
 const STREAM_TIMEOUT_MS = 30_000;
 
@@ -69,6 +69,18 @@ export const streamVideo = async (req, res, next) => {
   }
 };
 
+export const getUploadToken = async (req, res, next) => {
+  try {
+    const { token, baseUrl } = await getMediaToken();
+    res.json({
+      token,
+      uploadUrl: `${baseUrl}/media/videos/upload`,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const uploadVideo = async (req, res, next) => {
   try {
     if (!req.file) {
@@ -86,7 +98,9 @@ export const uploadVideo = async (req, res, next) => {
       method: "POST",
       body: formData,
     });
-    const data = await upstream.json();
+    const text = await upstream.text();
+    let data;
+    try { data = JSON.parse(text); } catch { data = { message: text || "Upload complete" }; }
     res.status(upstream.status).json(data);
   } catch (err) {
     next(err);
