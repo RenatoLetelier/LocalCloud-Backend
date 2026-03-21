@@ -9,6 +9,8 @@ import photoRoutes from "./src/modules/photos/photo.routes.js";
 import videoRoutes from "./src/modules/videos/video.routes.js";
 import mediaRoutes from "./src/modules/media/media.routes.js";
 import tunnelRoutes from "./src/modules/tunnel/tunnel.routes.js";
+import userMediaRoutes from "./src/modules/userMedia/userMedia.routes.js";
+import albumRoutes from "./src/modules/albums/album.routes.js";
 
 import { getHealth } from "./src/modules/media/media.controller.js";
 import { streamPhoto } from "./src/modules/photos/photo.controller.js";
@@ -32,6 +34,8 @@ app.use("/api/photos", requireAuth, photoRoutes);
 app.use("/api/videos", requireAuth, videoRoutes);
 app.use("/api/media", requireAuth, mediaRoutes);
 app.use("/api/tunnel", requireAuth, tunnelRoutes);
+app.use("/api/user-media", requireAuth, userMediaRoutes);
+app.use("/api/albums", requireAuth, albumRoutes);
 
 app.use(errorMiddleware);
 
