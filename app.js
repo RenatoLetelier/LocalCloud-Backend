@@ -24,7 +24,7 @@ app.get("/", (req, res) => res.send("Api working correctly"));
 app.use("/api/auth", authRoutes);
 app.get("/api/health", getHealth);
 app.get("/api/photos/:id/stream", streamPhoto);
-app.get("/api/videos/:id/stream/*", streamVideo);
+app.get("/api/videos/:id/stream/*splat", streamVideo);
 
 // Protected
 app.use("/api/users", requireAuth, userRoutes);
