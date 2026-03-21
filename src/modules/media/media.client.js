@@ -87,15 +87,11 @@ export async function getMediaBaseUrl() {
   return getBaseUrl();
 }
 
-/** Returns the CDN base URL for direct frontend streaming. Falls back to the API URL if not set. */
-export async function getMediaCdnUrl() {
-  const config = await getConfig();
-  return (config.cdnUrl ?? config.url).replace(/\/$/, "");
-}
-
-/** Returns a valid media API token and the base URL — for direct client uploads. */
+/** Returns a valid media API token — for direct client video uploads via the upload URL. */
 export async function getMediaToken() {
   const baseUrl = await getBaseUrl();
   const token = await ensureToken(baseUrl);
-  return { token, baseUrl };
+  const config = await getConfig();
+  const uploadUrl = (config.uploadUrl ?? config.url).replace(/\/$/, "");
+  return { token, uploadUrl };
 }

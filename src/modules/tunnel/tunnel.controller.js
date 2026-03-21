@@ -14,7 +14,7 @@ export const getTunnel = async (req, res, next) => {
 
 export const setTunnel = async (req, res, next) => {
   try {
-    const config = await service.set(req.body.url, req.body.cdnUrl);
+    const config = await service.set(req.body.url, req.body.uploadUrl);
     res.json(config);
   } catch (err) {
     next(err);

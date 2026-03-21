@@ -9,7 +9,7 @@ export class TunnelService {
     return this.repo.get();
   }
 
-  set(url, cdnUrl) {
-    return this.repo.set(url, cdnUrl);
+  set(url, uploadUrl) {
+    return this.repo.set(url, uploadUrl);
   }
 }

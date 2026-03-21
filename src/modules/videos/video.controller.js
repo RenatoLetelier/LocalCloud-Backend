@@ -1,5 +1,5 @@
 import { Readable } from "stream";
-import { mediaFetch, getMediaToken, getMediaCdnUrl } from "../media/media.client.js";
+import { mediaFetch, getMediaToken, getMediaBaseUrl } from "../media/media.client.js";
 
 export const listVideos = async (req, res, next) => {
   try {
@@ -24,13 +24,13 @@ export const getVideo = async (req, res, next) => {
   }
 };
 
-// Redirects HLS requests (segments, playlists, subtitles) to the CDN.
+// Redirects HLS requests (segments, playlists, subtitles) to the media API.
 // Route: GET /api/videos/:id/stream/*splat
 export const streamVideo = async (req, res, next) => {
   try {
-    const cdnUrl = await getMediaCdnUrl();
+    const baseUrl = await getMediaBaseUrl();
     const subpath = req.params.splat || "";
-    res.redirect(`${cdnUrl}/media/videos/${encodeURIComponent(req.params.id)}/stream/${subpath}`);
+    res.redirect(`${baseUrl}/media/videos/${encodeURIComponent(req.params.id)}/stream/${subpath}`);
   } catch (err) {
     next(err);
   }
@@ -38,10 +38,10 @@ export const streamVideo = async (req, res, next) => {
 
 export const getUploadToken = async (req, res, next) => {
   try {
-    const { token, baseUrl } = await getMediaToken();
+    const { token, uploadUrl } = await getMediaToken();
     res.json({
       token,
-      uploadUrl: `${baseUrl}/media/videos/upload`,
+      uploadUrl: `${uploadUrl}/media/videos/upload`,
     });
   } catch (err) {
     next(err);

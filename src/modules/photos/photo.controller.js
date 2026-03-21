@@ -1,4 +1,4 @@
-import { mediaFetch, getMediaCdnUrl } from "../media/media.client.js";
+import { mediaFetch, getMediaBaseUrl } from "../media/media.client.js";
 
 export const listPhotos = async (req, res, next) => {
   try {
@@ -25,8 +25,8 @@ export const getPhoto = async (req, res, next) => {
 
 export const streamPhoto = async (req, res, next) => {
   try {
-    const cdnUrl = await getMediaCdnUrl();
-    res.redirect(`${cdnUrl}/media/files/${encodeURIComponent(req.params.id)}/stream`);
+    const baseUrl = await getMediaBaseUrl();
+    res.redirect(`${baseUrl}/media/files/${encodeURIComponent(req.params.id)}/stream`);
   } catch (err) {
     next(err);
   }
