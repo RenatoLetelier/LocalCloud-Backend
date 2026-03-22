@@ -73,6 +73,19 @@ export const streamVideo = async (req, res, next) => {
   }
 };
 
+export const thumbnailVideo = async (req, res, next) => {
+  try {
+    if (req.user.role !== "admin") {
+      const record = await userMediaRepo.findByUserAndMediaId(req.user.id, req.params.id);
+      if (!record) return res.status(403).json({ message: "Forbidden" });
+    }
+    const baseUrl = await getMediaBaseUrl();
+    res.redirect(`${baseUrl}/media/videos/${encodeURIComponent(req.params.id)}/thumbnail`);
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const getUploadToken = async (req, res, next) => {
   try {
     const { token, uploadUrl } = await getMediaToken();
