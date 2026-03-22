@@ -75,7 +75,7 @@ export const updatePhoto = async (req, res, next) => {
     const upstream = await mediaFetch(`/media/files/${encodeURIComponent(req.params.id)}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(req.body),
+      body: JSON.stringify({ filename: req.params.filename, ...req.body }),
     });
     const data = await upstream.json();
     res.status(upstream.status).json(data);

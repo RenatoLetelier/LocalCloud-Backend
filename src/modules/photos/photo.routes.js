@@ -1,6 +1,8 @@
 import { Router } from "express";
 import { listPhotos, getPhoto, streamPhoto, updatePhoto, deletePhoto } from "./photo.controller.js";
 import { requireRole } from "../../middlewares/auth.middleware.js";
+import { validate } from "../../middlewares/validate.middleware.js";
+import { updatePhotoSchema } from "./photo.schema.js";
 
 const router = Router();
 
