@@ -34,7 +34,7 @@ export const createPhotoSchema = z.object({
 });
 
 export const updatePhotoSchema = z.object({
-  params: z.object({ filename: z.string().min(1) }),
+  params: z.object({ id: z.string().min(1) }),
   body: z.object({
     name: z.string().min(1).max(200).optional(),
     description: z.string().max(1000).optional(),

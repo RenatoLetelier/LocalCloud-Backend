@@ -1,0 +1,194 @@
+================================================================================
+  API REFERENCE — LocalCloud Backend
+================================================================================
+
+Base URL:  /api
+Auth:      Bearer token (JWT) via Authorization header
+           e.g. Authorization: Bearer <token>
+
+Roles:     user  — authenticated user (default)
+           admin — elevated privileges; required for write/delete operations
+
+--------------------------------------------------------------------------------
+  AUTH
+--------------------------------------------------------------------------------
+
+POST /api/auth/login
+  Description : Authenticate and receive a JWT token.
+  Auth        : None
+  Body        : { "email": string, "password": string }
+  Response    : { "user": { id, username, email, role }, "token": string }
+  Errors      : 400 Missing email or password
+                401 Incorrect email or password
+
+--------------------------------------------------------------------------------
+  USERS
+--------------------------------------------------------------------------------
+
+GET /api/users
+  Description : List all users.
+  Auth        : Any authenticated user
+
+GET /api/users/:id
+  Description : Get a single user by ID.
+  Auth        : Any authenticated user
+  Params      : id — cuid
+
+POST /api/users
+  Description : Create a new user.
+  Auth        : admin
+  Body        : {
+                  "email":    string (valid email),
+                  "username": string (1–100 chars),
+                  "password": string (1–100 chars),
+                  "role":     "admin" | "user"   (optional, defaults to "user")
+                }
+
+PATCH /api/users/:id
+  Description : Update a user.
+  Auth        : admin
+  Params      : id — cuid
+  Body (all optional):
+                {
+                  "email":    string,
+                  "username": string (1–100 chars),
+                  "password": string (1–100 chars),
+                  "role":     "admin" | "user"
+                }
+
+DELETE /api/users/:id
+  Description : Delete a user (cascades to their photos).
+  Auth        : admin
+  Params      : id — cuid
+
+--------------------------------------------------------------------------------
+  PHOTOS
+--------------------------------------------------------------------------------
+
+GET /api/photos
+  Description : List photos (proxied from media server).
+  Auth        : Any authenticated user
+  Query       : page  — integer, default 1
+                limit — integer, default 50
+
+GET /api/photos/:filename
+  Description : Get photo metadata by filename (proxied from media server).
+  Auth        : Any authenticated user
+  Params      : filename — photo filename on the media server
+
+PATCH /api/photos/:filename
+  Description : Update a photo's name, metadata, tags, etc.
+                Proxied to media server with filename injected into the body.
+  Auth        : admin
+  Params      : filename — photo filename on the media server
+  Body (all optional):
+                {
+                  "name":        string (1–200 chars),
+                  "description": string (max 1000 chars),
+                  "path":        string,
+                  "albums":      string[],
+                  "tags":        string[]   e.g. ["nature","beach","night"],
+                  "visibility":  "public" | "private",
+                  "metadata": {
+                    "size":     number (bytes),
+                    "type":     string (mime type),
+                    "width":    integer (px),
+                    "height":   integer (px),
+                    "location": {
+                      "lat":   number  (-90 to 90),
+                      "lng":   number  (-180 to 180),
+                      "label": string  (optional, max 200 chars)
+                    },
+                    "people":   string[]   names of people in the photo
+                  }
+                }
+  Notes       : Only send fields you want to change — all are optional.
+                Whether the media server persists extended fields (location,
+                people) depends on the Pi-side API implementation.
+
+DELETE /api/photos/:filename
+  Description : Delete a photo file (proxied to media server).
+  Auth        : admin
+  Params      : filename — photo filename on the media server
+
+--------------------------------------------------------------------------------
+  VIDEOS
+--------------------------------------------------------------------------------
+
+GET /api/videos
+  Description : List videos (proxied from media server).
+  Auth        : Any authenticated user
+  Query       : page  — integer, default 1
+                limit — integer, default 50
+
+GET /api/videos/:filename
+  Description : Get video metadata by filename (proxied from media server).
+  Auth        : Any authenticated user
+  Params      : filename — video filename on the media server
+
+PATCH /api/videos
+  Description : Update a video's metadata (proxied to media server).
+  Auth        : admin
+  Body        : { "filename": string, ...fields }
+  Notes       : filename must be included in the body (no URL param).
+
+DELETE /api/videos/:filename
+  Description : Delete a video file (proxied to media server).
+  Auth        : admin
+  Params      : filename — video filename on the media server
+
+--------------------------------------------------------------------------------
+  MEDIA (file streaming & upload)
+--------------------------------------------------------------------------------
+
+GET /api/media/file/:filename
+  Description : Stream a file (photo or video) directly from the media server.
+                Supports HTTP Range requests for video seeking and buffering.
+  Auth        : Any authenticated user
+  Params      : filename — file name on the media server
+  Headers     : Range (optional) — forwarded to media server for partial content
+  Response    : Binary file stream
+                Forwards: Content-Type, Content-Length, Content-Range,
+                          Accept-Ranges, Content-Disposition
+  Errors      : 504 Media server did not respond within 30 seconds
+
+POST /api/media/upload
+  Description : Upload a file to the media server.
+  Auth        : admin
+  Body        : multipart/form-data, field name: "files"
+  Response    : Proxied response from media server
+
+POST /api/media/deduplicate
+  Description : Trigger deduplication on the media server.
+                Exact behavior (file deletion vs. DB cleanup) is determined
+                by the Pi-side media API — use with caution.
+  Auth        : admin
+  Body        : {} (any options supported by the media server)
+  Response    : Proxied response from media server
+
+--------------------------------------------------------------------------------
+  TUNNEL
+--------------------------------------------------------------------------------
+
+GET /api/tunnel
+  Description : Get the current media server tunnel URL.
+  Auth        : Any authenticated user
+  Response    : { "id": "singleton", "url": string, "updatedAt": datetime }
+
+PUT /api/tunnel
+  Description : Set the media server tunnel URL.
+  Auth        : admin
+  Body        : { "url": string (valid URL) }
+
+--------------------------------------------------------------------------------
+  NOTES
+--------------------------------------------------------------------------------
+
+- "Proxied" endpoints forward requests to the Raspberry Pi media server.
+  This backend acts as an authenticated gateway; business logic for those
+  endpoints lives on the media server, not here.
+
+- The media server base URL is resolved dynamically from the TunnelConfig
+  stored in the database (set via PUT /api/tunnel).
+
+================================================================================

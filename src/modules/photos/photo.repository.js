@@ -15,8 +15,16 @@ export class PhotoRepository {
     return prisma.photo.findUnique({ where: { path } });
   }
 
+  findManyByPaths(paths) {
+    return prisma.photo.findMany({ where: { path: { in: paths } } });
+  }
+
   findMany(skip, take) {
     return prisma.photo.findMany({ skip, take });
+  }
+
+  upsertByPath(path, create, update) {
+    return prisma.photo.upsert({ where: { path }, create, update });
   }
 
   update(id, data) {
