@@ -98,6 +98,19 @@ export const streamPhoto = async (req, res, next) => {
   }
 };
 
+export const thumbnailPhoto = async (req, res, next) => {
+  try {
+    if (req.user.role !== "admin") {
+      const record = await userMediaRepo.findByUserAndMediaId(req.user.id, req.params.id);
+      if (!record) return res.status(403).json({ message: "Forbidden" });
+    }
+    const baseUrl = await getMediaBaseUrl();
+    res.redirect(`${baseUrl}/media/files/${encodeURIComponent(req.params.id)}/thumbnail`);
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const updatePhoto = async (req, res, next) => {
   try {
     const upstream = await mediaFetch(`/media/files/${encodeURIComponent(req.params.id)}`, {
