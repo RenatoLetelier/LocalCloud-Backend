@@ -17,6 +17,11 @@ enum Visibility {
   private
 }
 
+enum MediaType {
+  photo
+  video
+}
+
 model User {
   id       String @id @default(cuid())
   username String
@@ -24,7 +29,9 @@ model User {
   password String
   role     Role   @default(user)
 
-  photos Photo[]
+  photos    Photo[]
+  userMedia UserMedia[]
+  albums    Album[]
 }
 
 model Photo {
@@ -42,8 +49,49 @@ model Photo {
   @@index([uploadedById])
 }
 
+model UserMedia {
+  id        String    @id @default(cuid())
+  userId    String
+  mediaId   String
+  mediaType MediaType
+  createdAt DateTime  @default(now())
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  albumItems AlbumItem[]
+
+  @@unique([userId, mediaId])
+  @@index([userId])
+}
+
+model Album {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  userId      String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items AlbumItem[]
+
+  @@index([userId])
+}
+
+model AlbumItem {
+  id          String   @id @default(cuid())
+  albumId     String
+  userMediaId String
+  createdAt   DateTime @default(now())
+
+  album     Album     @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  userMedia UserMedia @relation(fields: [userMediaId], references: [id], onDelete: Cascade)
+
+  @@unique([albumId, userMediaId])
+}
+
 model TunnelConfig {
   id        String   @id @default("singleton")
   url       String
+  uploadUrl String?
   updatedAt DateTime @updatedAt
 }
