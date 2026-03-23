@@ -1,4 +1,7 @@
 import { mediaFetch, getMediaBaseUrl } from "./media.client.js";
+import { UserMediaRepository } from "../userMedia/userMedia.repository.js";
+
+const userMediaRepo = new UserMediaRepository();
 
 /**
  * GET /api/health
@@ -44,6 +47,17 @@ export const uploadFile = async (req, res, next) => {
     });
 
     const data = await upstream.json();
+    if (!upstream.ok) return res.status(upstream.status).json(data);
+
+    // Auto-link the uploaded file to the uploader — works for any authenticated user.
+    // The media server returns { results: [{ id, type, … }] }.
+    const results = data.results ?? [];
+    await Promise.all(
+      results.map((file) =>
+        userMediaRepo.upsert(req.user.id, String(file.id), file.type ?? "photo")
+      )
+    );
+
     res.status(upstream.status).json(data);
   } catch (err) {
     next(err);

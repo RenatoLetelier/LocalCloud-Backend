@@ -2,7 +2,8 @@ import { z } from "zod";
 
 export const assignMediaSchema = z.object({
   body: z.object({
-    userId: z.string().cuid(),
+    // userId is optional — non-admins default to their own id on the server
+    userId: z.string().cuid().optional(),
     mediaId: z.string().min(1),
     mediaType: z.enum(["photo", "video"]),
   }),

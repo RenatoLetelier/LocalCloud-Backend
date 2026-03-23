@@ -7,6 +7,7 @@ import {
   thumbnailVideo,
   updateVideo,
   deleteVideo,
+  deleteThumbnailVideo,
   uploadVideo,
   addVideoFile,
   getUploadToken,
@@ -41,6 +42,9 @@ router.post("/:id/files", requireRole("admin"), upload.single("file"), addVideoF
 
 // PATCH /api/videos/:id
 router.patch("/:id", requireRole("admin"), updateVideo);
+
+// DELETE /api/videos/:id/thumbnail
+router.delete("/:id/thumbnail", requireRole("admin"), deleteThumbnailVideo);
 
 // DELETE /api/videos/:id
 router.delete("/:id", requireRole("admin"), deleteVideo);

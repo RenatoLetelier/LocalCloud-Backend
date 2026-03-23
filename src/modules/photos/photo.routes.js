@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { listPhotos, getPhoto, streamPhoto, thumbnailPhoto, updatePhoto, deletePhoto } from "./photo.controller.js";
+import { listPhotos, getPhoto, streamPhoto, thumbnailPhoto, updatePhoto, deletePhoto, deleteThumbnailPhoto } from "./photo.controller.js";
 import { requireRole } from "../../middlewares/auth.middleware.js";
 import { validate } from "../../middlewares/validate.middleware.js";
 import { updatePhotoSchema } from "./photo.schema.js";
@@ -20,6 +20,9 @@ router.get("/:id", getPhoto);
 
 // PATCH /api/photos/:id
 router.patch("/:id", requireRole("admin"), updatePhoto);
+
+// DELETE /api/photos/:id/thumbnail
+router.delete("/:id/thumbnail", requireRole("admin"), deleteThumbnailPhoto);
 
 // DELETE /api/photos/:id
 router.delete("/:id", requireRole("admin"), deletePhoto);
