@@ -34,4 +34,9 @@ export class PhotoRepository {
   delete(id) {
     return prisma.photo.delete({ where: { id } });
   }
+
+  // Deletes by the media-server ID used as path — silently ignores if not found
+  deleteByPath(path) {
+    return prisma.photo.deleteMany({ where: { path } });
+  }
 }

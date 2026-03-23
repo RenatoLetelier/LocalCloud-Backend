@@ -111,6 +111,21 @@ export const thumbnailPhoto = async (req, res, next) => {
   }
 };
 
+export const deleteThumbnailPhoto = async (req, res, next) => {
+  try {
+    const upstream = await mediaFetch(
+      `/media/files/${encodeURIComponent(req.params.id)}/thumbnail`,
+      { method: "DELETE" }
+    );
+    // 204 = deleted, 404 = already gone — both are fine
+    if (upstream.status === 204 || upstream.status === 404) return res.status(204).send();
+    const data = await upstream.json();
+    res.status(upstream.status).json(data);
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const updatePhoto = async (req, res, next) => {
   try {
     const upstream = await mediaFetch(`/media/files/${encodeURIComponent(req.params.id)}`, {
@@ -160,7 +175,18 @@ export const deletePhoto = async (req, res, next) => {
       `/media/files/${encodeURIComponent(req.params.id)}`,
       { method: "DELETE" }
     );
-    if (upstream.status === 204) return res.status(204).send();
+
+    if (upstream.ok || upstream.status === 204) {
+      // Delete thumbnail in parallel with DB cleanup — ignore 404 if already gone
+      await Promise.all([
+        userMediaRepo.deleteByMediaId(req.params.id),
+        photoRepo.deleteByPath(req.params.id),
+        mediaFetch(`/media/files/${encodeURIComponent(req.params.id)}/thumbnail`, { method: "DELETE" })
+          .catch(() => {}),
+      ]);
+      return res.status(204).send();
+    }
+
     const data = await upstream.json();
     res.status(upstream.status).json(data);
   } catch (err) {

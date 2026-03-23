@@ -6,13 +6,8 @@ export class UserMediaService {
   }
 
   async assign(userId, mediaId, mediaType) {
-    const existing = await this.repo.findByUserAndMediaId(userId, mediaId);
-    if (existing) {
-      const e = new Error("Media already assigned to this user");
-      e.status = 409;
-      throw e;
-    }
-    return this.repo.create(userId, mediaId, mediaType);
+    // upsert: safe to call multiple times — no 409 if already linked
+    return this.repo.upsert(userId, mediaId, mediaType);
   }
 
   listByUser(userId) {

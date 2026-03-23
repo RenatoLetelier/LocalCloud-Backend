@@ -49,4 +49,8 @@ export class UserMediaRepository {
       where: { userId_mediaId: { userId, mediaId } },
     });
   }
+
+  deleteByMediaId(mediaId) {
+    return prisma.userMedia.deleteMany({ where: { mediaId } });
+  }
 }

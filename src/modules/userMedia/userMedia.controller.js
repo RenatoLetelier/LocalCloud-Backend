@@ -3,10 +3,16 @@ import { UserMediaService } from "./userMedia.service.js";
 const service = new UserMediaService();
 
 // POST /api/user-media
-// Admin assigns a media item to a user. Body: { userId, mediaId, mediaType }
+// Any authenticated user can link a media item to themselves.
+// Admins can also link to any userId supplied in the body.
+// Body: { userId, mediaId, mediaType }
 export const assignMedia = async (req, res, next) => {
   try {
-    const { userId, mediaId, mediaType } = req.body;
+    const { mediaId, mediaType } = req.body;
+    // Non-admins can only assign to themselves regardless of what userId they send
+    const userId = req.user.role === "admin" && req.body.userId
+      ? req.body.userId
+      : req.user.id;
     const record = await service.assign(userId, mediaId, mediaType);
     res.status(201).json(record);
   } catch (err) {
@@ -31,6 +37,27 @@ export const listUserMedia = async (req, res, next) => {
   try {
     const items = await service.listByUser(req.params.userId);
     res.json(items);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// POST /api/user-media/claim
+// Lets an authenticated user claim a list of mediaIds by ID (e.g. to recover
+// photos that were uploaded before auto-linking was in place).
+// Body: { mediaIds: ["id1", "id2", …], mediaType: "photo" | "video" }
+export const claimMedia = async (req, res, next) => {
+  try {
+    const { mediaIds = [], mediaType = "photo" } = req.body;
+    if (!Array.isArray(mediaIds) || mediaIds.length === 0) {
+      return res.status(400).json({ message: "mediaIds must be a non-empty array" });
+    }
+    const records = await Promise.all(
+      mediaIds.map((mediaId) =>
+        service.assign(req.user.id, String(mediaId), mediaType)
+      )
+    );
+    res.status(201).json({ claimed: records.length, records });
   } catch (err) {
     next(err);
   }
